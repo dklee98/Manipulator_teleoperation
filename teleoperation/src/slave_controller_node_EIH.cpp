@@ -92,31 +92,36 @@ public:
 
 		// Get current master orientation
 		tf::Pose mst_pose;
-		tf::poseMsgToTF(master_cmd.pose,mst_pose);
+		tf::poseMsgToTF(master_cmd.pose, mst_pose);
 		tf::Matrix3x3 mst_rot_tf = mst_pose.getBasis();
+		tf::Vector3 mst_pos_tf = mst_pose.getOrigin();
+		// double mst_roll, mst_pitch, mst_yaw;
+		// mst_rot_tf.getRPY(mst_roll, mst_pitch, mst_yaw);
 		Eigen::Matrix3d mst_rot_eig;
-		tf::matrixTFToEigen(mst_rot_tf,mst_rot_eig); // We get master rotation matrix now.
+		Eigen::Vector3d mst_pos_eig;
+		tf::matrixTFToEigen(mst_rot_tf, mst_rot_eig); // We get master rotation matrix now.
+		tf::vectorTFToEigen(mst_pos_tf, mst_pos_eig);
 		
 		// Get current slave orientation
 		tf::Pose current_pose;
-		tf::poseMsgToTF(target_pose_.pose,current_pose);
+		tf::poseMsgToTF(target_pose_.pose, current_pose);
 		tf::Matrix3x3 current_rot_tf = current_pose.getBasis();
+		tf::Vector3 cur_pos_tf = current_pose.getOrigin();
+		// double cur_roll, cur_pitch, cur_yaw;
+		// current_rot_tf.getRPY(cur_roll, cur_pitch, cur_yaw);
 		Eigen::Matrix3d current_rot_eig;
-		tf::matrixTFToEigen(current_rot_tf,current_rot_eig); // We get master rotation matrix now.
+		Eigen::Vector3d cur_pos_eig;
+		tf::matrixTFToEigen(current_rot_tf, current_rot_eig); // We get master rotation matrix now. // modify: master -> slave
+		tf::vectorTFToEigen(cur_pos_tf, cur_pos_eig);
 
-		// Get current camera orientation
-		CamPoseListener.lookupTransform("world","base_camera_link",ros::Time(0), T_BaseToCam_);
-		tf::Matrix3x3 R_temp = T_BaseToCam_.getBasis();
-		tf::matrixTFToEigen(R_temp,R_BaseToCam_);
+		// // Example of matrix calculation based on Eigen library
+        // Eigen::MatrixXd T(3,3); // matrix T(3x3)
+        // Eigen::MatrixXd T_T = T.transpose(); // transpose of T
+        // Eigen::MatrixXd T_inv = T.inverse(); // inverse of T
+        // double t01 = T(0,1); // value for the row:1; col:2 component of matrix T
 
-		// Example of matrix calculation based on Eigen library
-        Eigen::MatrixXd T(3,3); // matrix T(3x3)
-        Eigen::MatrixXd T_T = T.transpose(); // transpose of T
-        Eigen::MatrixXd T_inv = T.inverse(); // inverse of T
-        double t01 = T(0,1); // value for the row:1; col:2 component of matrix T
-
-        Eigen::MatrixXd A(3,3), B(3,3); // matrix A and B
-        Eigen::MatrixXd AB = A*B; // possible to multiply matrices
+        // Eigen::MatrixXd A(3,3), B(3,3); // matrix A and B
+        // Eigen::MatrixXd AB = A*B; // possible to multiply matrices
 		
 		
         // The value of 'teleoperation_mode_' varaible is defined by the 'teleoperation_mode' parameter in the 'teleoperation.launch' file

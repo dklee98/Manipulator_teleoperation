@@ -63,16 +63,28 @@ public:
             
             // Make your increments command
 
+            // Old Position
+            double o_px = old_msg->pos.pose.position.x;
+            double o_py = old_msg->pos.pose.position.y;
+            double o_pz = old_msg->pos.pose.position.z;
+
+            // Old Orientation
+            Eigen::Quaternionf o_rot(
+                old_msg->pos.pose.orientation.w,
+                old_msg->pos.pose.orientation.x,
+                old_msg->pos.pose.orientation.y,
+                old_msg->pos.pose.orientation.z);
+
             // Translation
-            master_command.pose.position.x = 0.0; // replace '0.0' to your command value
-            master_command.pose.position.y = 0.0; // replace '0.0' to your command value
-            master_command.pose.position.z = 0.0; // replace '0.0' to your command value
+            master_command.pose.position.x = m_px - o_px; // replace '0.0' to your command value
+            master_command.pose.position.y = m_py - o_py; // replace '0.0' to your command value
+            master_command.pose.position.z = m_pz - o_pz; // replace '0.0' to your command value
 
             // Orientation
-            master_command.pose.orientation.x = 0.0; // replace value to your command value
-            master_command.pose.orientation.y = 0.0; // replace value to your command value
-            master_command.pose.orientation.z = 0.0; // replace value to your command value
-            master_command.pose.orientation.w = 1.0; // replace value to your command value
+            master_command.pose.orientation.x = m_rot.x() - o_rot.x(); // replace value to your command value
+            master_command.pose.orientation.y = m_rot.y() - o_rot.y(); // replace value to your command value
+            master_command.pose.orientation.z = m_rot.z() - o_rot.z(); // replace value to your command value
+            master_command.pose.orientation.w = m_rot.w() - o_rot.w(); // replace value to your command value
         }
 
         // 2.Position to Velocity : publish the position command
