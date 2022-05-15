@@ -64,16 +64,16 @@ public:
             // Make your increments command
 
             // Old Position
-            double o_px = old_msg->pos.pose.position.x;
-            double o_py = old_msg->pos.pose.position.y;
-            double o_pz = old_msg->pos.pose.position.z;
+            double o_px = old_msg.pos.pose.position.x;
+            double o_py = old_msg.pos.pose.position.y;
+            double o_pz = old_msg.pos.pose.position.z;
 
             // Old Orientation
             Eigen::Quaternionf o_rot(
-                old_msg->pos.pose.orientation.w,
-                old_msg->pos.pose.orientation.x,
-                old_msg->pos.pose.orientation.y,
-                old_msg->pos.pose.orientation.z);
+                old_msg.pos.pose.orientation.w,
+                old_msg.pos.pose.orientation.x,
+                old_msg.pos.pose.orientation.y,
+                old_msg.pos.pose.orientation.z);
 
             // Translation
             master_command.pose.position.x = m_px - o_px; // replace '0.0' to your command value
