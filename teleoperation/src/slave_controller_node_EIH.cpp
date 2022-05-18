@@ -12,7 +12,7 @@
 
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Dense>
-#include <unsupported/Eigen/MatrixFunctions>
+
 using namespace std;
 
 inline Eigen::Vector3d vex(const Eigen::Matrix3d &m) {
@@ -51,9 +51,8 @@ public:
 	tf::StampedTransform T_BaseToCam_;
 	tf::StampedTransform T_BaseToEE_;
 
-	Eigen::Matrix3d R_CamToScr_;
 	Eigen::Matrix3d R_BaseToCam_;
-	Eigen::Affine3d T_BaseToEE_Eig_;
+	Eigen::Matrix3d R_BaseToMas_;
 
     int teleoperation_mode_;
 
@@ -86,7 +85,6 @@ public:
         t2 = t1;
 //        ROS_INFO("Dt: %f",Dt);
 
-
         // Target Pose Update after getting the initial pose of slave manipulator
         if(!is_initial_slave_ee_pose_get_) return;
 
@@ -95,8 +93,6 @@ public:
 		tf::poseMsgToTF(master_cmd.pose, mst_pose);
 		tf::Matrix3x3 mst_rot_tf = mst_pose.getBasis();
 		tf::Vector3 mst_pos_tf = mst_pose.getOrigin();
-		// double mst_roll, mst_pitch, mst_yaw;
-		// mst_rot_tf.getRPY(mst_roll, mst_pitch, mst_yaw);
 		Eigen::Matrix3d mst_rot_eig;
 		Eigen::Vector3d mst_pos_eig;
 		tf::matrixTFToEigen(mst_rot_tf, mst_rot_eig); // We get master rotation matrix now.
@@ -104,34 +100,77 @@ public:
 		
 		// Get current slave orientation
 		tf::Pose current_pose;
-		tf::poseMsgToTF(target_pose_.pose, current_pose);
+		tf::poseMsgToTF(target_pose_.pose,current_pose);
 		tf::Matrix3x3 current_rot_tf = current_pose.getBasis();
 		tf::Vector3 cur_pos_tf = current_pose.getOrigin();
-		// double cur_roll, cur_pitch, cur_yaw;
-		// current_rot_tf.getRPY(cur_roll, cur_pitch, cur_yaw);
-		Eigen::Matrix3d current_rot_eig;
+		Eigen::Matrix3d cur_rot_eig;
 		Eigen::Vector3d cur_pos_eig;
-		tf::matrixTFToEigen(current_rot_tf, current_rot_eig); // We get master rotation matrix now. // modify: master -> slave
+		tf::matrixTFToEigen(current_rot_tf, cur_rot_eig); // We get master rotation matrix now.
 		tf::vectorTFToEigen(cur_pos_tf, cur_pos_eig);
 
-		// // Example of matrix calculation based on Eigen library
-        // Eigen::MatrixXd T(3,3); // matrix T(3x3)
-        // Eigen::MatrixXd T_T = T.transpose(); // transpose of T
-        // Eigen::MatrixXd T_inv = T.inverse(); // inverse of T
-        // double t01 = T(0,1); // value for the row:1; col:2 component of matrix T
+		// Get current camera orientation
+		CamPoseListener.lookupTransform("world","base_camera_link",ros::Time(0), T_BaseToCam_);
+		tf::Matrix3x3 R_temp = T_BaseToCam_.getBasis();
+		tf::matrixTFToEigen(R_temp,R_BaseToCam_);
 
-        // Eigen::MatrixXd A(3,3), B(3,3); // matrix A and B
-        // Eigen::MatrixXd AB = A*B; // possible to multiply matrices
+		static bool master2base_init = false;
+        tf::TransformListener listener;
+        if(!master2base_init)
+        {
+            try{
+                listener.waitForTransform(robot_name_+"_link0", "master",ros::Time(0), ros::Duration(1.5));
+                listener.lookupTransform(robot_name_+"_link0", "master",ros::Time(0),T_BaseToMas_);
+				tf::Matrix3x3 R_temp = T_BaseToMas_.getBasis();
+				tf::matrixTFToEigen(R_temp, R_BaseToMas_);
+                master2base_init = true;
+            }
+            catch (tf::TransformException ex){
+                ROS_ERROR("%s",ex.what());
+                ros::Duration(0.5).sleep();
+            }
+        }
 		
 		
         // The value of 'teleoperation_mode_' varaible is defined by the 'teleoperation_mode' parameter in the 'teleoperation.launch' file
         // 1.Position to Position : publish the increments command
         if(teleoperation_mode_ == 1){
+			//  debugging --------------------------------------------------------
+			// Eigen::Vector3d mst_rpy = mst_rot_eig.eulerAngles(0,1,2);
+			// Eigen::Vector3d cur_rpy = cur_rot_eig.eulerAngles(0,1,2);
+			// cout << "master & current roll, pitch, yaw command" << endl;
+			// cout << "roll: " << mst_rpy[0] << " and " << cur_rpy[0] << endl;
+			// cout << "pitc: " << mst_rpy[1] << " and " << cur_rpy[1] << endl;
+			// cout << "yaww: " << mst_rpy[2] << " and " << cur_rpy[2] << endl;
+			// -------------------------------------------------------------------
 
-            // Implement your controller
+			Eigen::Vector3d pos_add = R_BaseToCam_ * R_BaseToMas_ * mst_pos_eig;
+			Eigen::Matrix3d rot_add = R_BaseToCam_ * R_BaseToMas_ * mst_rot_eig * (R_BaseToCam_ * R_BaseToMas_).inverse() * cur_rot_eig;
+			Eigen::Quaterniond q_add(rot_add);
 
-            // Update Desired End-effector Pose to the 'target_pose_' variable.
+			//  debugging --------------------------------------------------------
+			// Eigen::Vector3d add_rpy = rot_add.eulerAngles(0,1,2);
+			// Eigen::Vector3d cur_rpy = cur_rot_eig.eulerAngles(0,1,2);
+			// cout << "add & current roll, pitch, yaw command" << endl;
+			// cout << "roll: " << add_rpy[0] << " and " << cur_rpy[0] << endl;
+			// cout << "pitc: " << add_rpy[1] << " and " << cur_rpy[1] << endl;
+			// cout << "yaww: " << add_rpy[2] << " and " << cur_rpy[2] << endl;
+			// -------------------------------------------------------------------
 
+			// Eigen::Quaterniond q_add(cur_rot_eig);
+			// tf::Quaternion q_goal_tf;
+			// tf::quaternionEigenToTF(q_add, q_goal_tf);
+			// geometry_msgs::Quaternion q_goal;
+			// tf::quaternionTFToMsg(q_goal_tf, q_goal);
+			
+
+			double k = 1.0;
+			target_pose_.pose.position.x = target_pose_.pose.position.x + k * pos_add(0);
+			target_pose_.pose.position.y = target_pose_.pose.position.y + k * pos_add(1);
+			target_pose_.pose.position.z = target_pose_.pose.position.z + k * pos_add(2);
+			target_pose_.pose.orientation.x = q_add.x();
+			target_pose_.pose.orientation.y = q_add.y();
+			target_pose_.pose.orientation.z = q_add.z();
+			target_pose_.pose.orientation.w = q_add.w();
         }
 
         // 2.Position to Velocity : publish the position command
@@ -194,6 +233,9 @@ public:
 				if(is_slave_state_){
 					geometry_msgs::TransformStamped transform;
 					tf::transformStampedTFToMsg(T_BaseToTip_,transform);
+					cout << target_pose_.pose.position.x << endl;
+					cout << target_pose_.pose.position.y << endl;
+					cout << target_pose_.pose.position.z << endl;
 
 			        target_pose_.pose.position.x = transform.transform.translation.x;
 			        target_pose_.pose.position.y = transform.transform.translation.y;

@@ -43,7 +43,7 @@ public:
         double m_pz = msg->pos.pose.position.z;
 
         // Master Orientation
-        Eigen::Quaternionf m_rot(
+        Eigen::Quaternionf m_q(
             msg->pos.pose.orientation.w,
             msg->pos.pose.orientation.x,
             msg->pos.pose.orientation.y,
@@ -69,11 +69,60 @@ public:
             double o_pz = old_msg.pos.pose.position.z;
 
             // Old Orientation
-            Eigen::Quaternionf o_rot(
+            Eigen::Quaternionf o_q(
                 old_msg.pos.pose.orientation.w,
                 old_msg.pos.pose.orientation.x,
                 old_msg.pos.pose.orientation.y,
                 old_msg.pos.pose.orientation.z);
+
+            // Eigen::Vector3f m_rpy = m_q.toRotationMatrix().eulerAngles(0,1,2);
+            // Eigen::Vector3f o_rpy = o_q.toRotationMatrix().eulerAngles(0,1,2);
+            
+            // Eigen::Vector3f diff_rpy = m_rpy - o_rpy;
+            // for(int i=0;i++;i<3)    {
+            //     if(abs(m_rpy[i] - o_rpy[i]) > 160)  {
+            //         diff_rpy[i] = m_rpy[i] - (180 - o_rpy[i]);
+            //     }
+            // }
+
+            // Eigen::Quaternionf q = Eigen::AngleAxisf(diff_rpy[0], Eigen::Vector3f::UnitX())
+            //                     * Eigen::AngleAxisf(diff_rpy[1], Eigen::Vector3f::UnitY())
+            //                     * Eigen::AngleAxisf(diff_rpy[2], Eigen::Vector3f::UnitZ());
+            
+            
+            Eigen::Quaternionf q = m_q * o_q.inverse();
+            Eigen::Vector3f q_rpy = q.toRotationMatrix().eulerAngles(0,1,2);
+            // std::cout << q_rpy[0] * 180/M_PI << std::endl;
+            // std::cout << q_rpy[1] * 180/M_PI << std::endl;
+            // std::cout << q_rpy[2] * 180/M_PI << std::endl;
+            // std::cout << "-----" << std::endl;
+
+            // std::cout << "current roll, pitch, yaw-----" << std::endl;
+            // std::cout << m_rpy[0] * 180/M_PI << std::endl;
+            // std::cout << m_rpy[1] * 180/M_PI << std::endl;
+            // std::cout << m_rpy[2] * 180/M_PI << std::endl;
+            // std::cout << "old roll, pitch, yaw-----" << std::endl;
+            // std::cout << o_rpy[0] * 180/M_PI << std::endl;
+            // std::cout << o_rpy[1] * 180/M_PI << std::endl;
+            // std::cout << o_rpy[2] * 180/M_PI << std::endl;
+            // std::cout << "diff roll, pitch, yaw-----" << std::endl;
+            // std::cout << diff_rpy[0] * 180/M_PI << std::endl;
+            // std::cout << diff_rpy[1] * 180/M_PI << std::endl;
+            // std::cout << diff_rpy[2] * 180/M_PI << std::endl;
+
+            // std::cout << "current quaternion-----" << std::endl;
+            // std::cout << m_q.x()  << std::endl;
+            // std::cout << m_q.y()  << std::endl;
+            // std::cout << m_q.z()  << std::endl;
+            // std::cout << m_q.w()  << std::endl;
+            // std::cout << "old roll, pitch, yaw-----" << std::endl;
+            // std::cout << o_rpy[0] * 180/M_PI << std::endl;
+            // std::cout << o_rpy[1] * 180/M_PI << std::endl;
+            // std::cout << o_rpy[2] * 180/M_PI << std::endl;
+            // std::cout << "diff roll, pitch, yaw-----" << std::endl;
+            // std::cout << diff_rpy[0] * 180/M_PI << std::endl;
+            // std::cout << diff_rpy[1] * 180/M_PI << std::endl;
+            // std::cout << diff_rpy[2] * 180/M_PI << std::endl;
 
             // Translation
             master_command.pose.position.x = m_px - o_px; // replace '0.0' to your command value
@@ -81,10 +130,11 @@ public:
             master_command.pose.position.z = m_pz - o_pz; // replace '0.0' to your command value
 
             // Orientation
-            master_command.pose.orientation.x = m_rot.x() - o_rot.x(); // replace value to your command value
-            master_command.pose.orientation.y = m_rot.y() - o_rot.y(); // replace value to your command value
-            master_command.pose.orientation.z = m_rot.z() - o_rot.z(); // replace value to your command value
-            master_command.pose.orientation.w = m_rot.w() - o_rot.w(); // replace value to your command value
+            master_command.pose.orientation.x = q.x(); // replace value to your command value
+            master_command.pose.orientation.y = q.y(); // replace value to your command value
+            master_command.pose.orientation.z = q.z(); // replace value to your command value
+            master_command.pose.orientation.w = q.w(); // replace value to your command value
+            
         }
 
         // 2.Position to Velocity : publish the position command

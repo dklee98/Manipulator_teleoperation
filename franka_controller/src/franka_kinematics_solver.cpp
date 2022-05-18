@@ -20,6 +20,7 @@
 #include <kdl/chainjnttojacsolver.hpp>
 #include <kdl/jacobian.hpp>
 
+using namespace std;
 
 class FrankaKinematicsSolver{
 public:
@@ -71,7 +72,7 @@ public:
 
         // Get Current joint angle q_current by current_joint_state
         KDL::JntArray q_current;
-        JointStateMsgToKDLJntArray(current_joint_state,q_current);
+        JointStateMsgToKDLJntArray(current_joint_state, q_current);
 
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,42 +81,50 @@ public:
 
 
         //--- Implement your code here ---//  implement inverse kinematics by using included functions in this c++ class
+        KDL::Frame target; 
+        KDL::JntArray q_target = KDL::JntArray(7);
+        PoseStampedMsgToKDLFrame(target_ee_pose_, target);
+        if(!KDLInverseKinematics(franka_chain_, target, q_current, q_target))
+        {
+            KDLJntArrayToJointStateMsg(q_target, desired_joint_state);
         
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+            // Publish final joint state.
+            sensor_msgs::JointState final_joint_state; // Including finger joints
+
+            final_joint_state = current_jointstate_;
+
+            // Updating desired joint positions
+            for(unsigned int i=0; i<7;i++){
+                final_joint_state.name[i+2] = desired_joint_state.name[i];
+                final_joint_state.position[i+2] = desired_joint_state.position[i];
+                final_joint_state.velocity[i+2] = desired_joint_state.velocity[i];
+                final_joint_state.effort[i+2] = desired_joint_state.effort[i];
+            }
+
+            final_joint_state.header.stamp = ros::Time::now();
+            desired_joint_state_pub_.publish(final_joint_state);
+
         
 
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+            // Forward Kinematics To check the result
+            geometry_msgs::PoseStamped updated_ee_pose;
+            KDL::JntArray q_now;
 
-        // Publish final joint state.
-        sensor_msgs::JointState final_joint_state; // Including finger joints
+            JointStateMsgToKDLJntArray(desired_joint_state,q_now);
 
-        final_joint_state = current_jointstate_;
+            KDL::Frame ee_frame;
+            int fk_res = KDLForwardKinematics(franka_chain_,q_now,ee_frame);
+            KDLFrameToPoseStampedMsg(ee_frame,updated_ee_pose);
+            updated_ee_pose.header.frame_id = "panda_link0";
+            updated_ee_pose.header.stamp = msg->header.stamp;
 
-        // Updating desired joint positions
-        for(unsigned int i=0; i<7;i++){
-            final_joint_state.name[i+2] = desired_joint_state.name[i];
-            final_joint_state.position[i+2] = desired_joint_state.position[i];
-            final_joint_state.velocity[i+2] = desired_joint_state.velocity[i];
-            final_joint_state.effort[i+2] = desired_joint_state.effort[i];
+            updated_ee_pose_pub_.publish(updated_ee_pose);
         }
-
-        final_joint_state.header.stamp = ros::Time::now();
-        desired_joint_state_pub_.publish(final_joint_state);
-
-
-        // Forward Kinematics To check the result
-        geometry_msgs::PoseStamped updated_ee_pose;
-        KDL::JntArray q_now;
-
-        JointStateMsgToKDLJntArray(desired_joint_state,q_now);
-
-        KDL::Frame ee_frame;
-        int fk_res = KDLForwardKinematics(franka_chain_,q_now,ee_frame);
-        KDLFrameToPoseStampedMsg(ee_frame,updated_ee_pose);
-        updated_ee_pose.header.frame_id = "panda_link0";
-        updated_ee_pose.header.stamp = msg->header.stamp;
-
-        updated_ee_pose_pub_.publish(updated_ee_pose);
 	}
 
 
@@ -160,6 +169,7 @@ public:
 
         // Solving IK
         int ik_result = iksolver_pos_nr_jl.CartToJnt(q_current,target_frame,q_out);
+        cout << ik_result << endl;
         return ik_result;
 	}
 

@@ -43,7 +43,7 @@ public:
         double m_pz = msg->pos.pose.position.z;
 
         // Master Orientation
-        Eigen::Quaternionf m_rot(
+        Eigen::Quaternionf m_q(
             msg->pos.pose.orientation.w,
             msg->pos.pose.orientation.x,
             msg->pos.pose.orientation.y,
@@ -62,17 +62,29 @@ public:
         if(teleoperation_mode_ == 1){
             
             // Make your increments command
+            // Old Position
+            double o_px = old_msg.pos.pose.position.x;
+            double o_py = old_msg.pos.pose.position.y;
+            double o_pz = old_msg.pos.pose.position.z;
 
+            // Old Orientation
+            Eigen::Quaternionf o_q(
+                old_msg.pos.pose.orientation.w,
+                old_msg.pos.pose.orientation.x,
+                old_msg.pos.pose.orientation.y,
+                old_msg.pos.pose.orientation.z);
+            Eigen::Quaternionf q = m_q * o_q.inverse();
+            Eigen::Vector3f q_rpy = q.toRotationMatrix().eulerAngles(0,1,2);
             // Translation
-            master_command.pose.position.x = 0.0; // replace '0.0' to your command value
-            master_command.pose.position.y = 0.0; // replace '0.0' to your command value
-            master_command.pose.position.z = 0.0; // replace '0.0' to your command value
+            master_command.pose.position.x = m_px - o_px; // replace '0.0' to your command value
+            master_command.pose.position.y = m_py - o_py; // replace '0.0' to your command value
+            master_command.pose.position.z = m_pz - o_pz; // replace '0.0' to your command value
 
             // Orientation
-            master_command.pose.orientation.x = 0.0; // replace value to your command value
-            master_command.pose.orientation.y = 0.0; // replace value to your command value
-            master_command.pose.orientation.z = 0.0; // replace value to your command value
-            master_command.pose.orientation.w = 1.0; // replace value to your command value
+            master_command.pose.orientation.x = q.x(); // replace value to your command value
+            master_command.pose.orientation.y = q.y(); // replace value to your command value
+            master_command.pose.orientation.z = q.z(); // replace value to your command value
+            master_command.pose.orientation.w = q.w(); // replace value to your command value
         }
 
         // 2.Position to Velocity : publish the position command
