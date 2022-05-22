@@ -60,8 +60,6 @@ public:
         // The value of 'teleoperation_mode_' varaible is defined by the 'teleoperation_mode' parameter in the 'teleoperation.launch' file
         // 1.Position to Position : publish the increments command
         if(teleoperation_mode_ == 1){
-            
-            // Make your increments command
 
             // Old Position
             double o_px = old_msg.pos.pose.position.x;
@@ -74,56 +72,11 @@ public:
                 old_msg.pos.pose.orientation.x,
                 old_msg.pos.pose.orientation.y,
                 old_msg.pos.pose.orientation.z);
-
-            // Eigen::Vector3f m_rpy = m_q.toRotationMatrix().eulerAngles(0,1,2);
-            // Eigen::Vector3f o_rpy = o_q.toRotationMatrix().eulerAngles(0,1,2);
-            
-            // Eigen::Vector3f diff_rpy = m_rpy - o_rpy;
-            // for(int i=0;i++;i<3)    {
-            //     if(abs(m_rpy[i] - o_rpy[i]) > 160)  {
-            //         diff_rpy[i] = m_rpy[i] - (180 - o_rpy[i]);
-            //     }
-            // }
-
-            // Eigen::Quaternionf q = Eigen::AngleAxisf(diff_rpy[0], Eigen::Vector3f::UnitX())
-            //                     * Eigen::AngleAxisf(diff_rpy[1], Eigen::Vector3f::UnitY())
-            //                     * Eigen::AngleAxisf(diff_rpy[2], Eigen::Vector3f::UnitZ());
             
             
             Eigen::Quaternionf q = m_q * o_q.inverse();
             Eigen::Vector3f q_rpy = q.toRotationMatrix().eulerAngles(0,1,2);
-            // std::cout << q_rpy[0] * 180/M_PI << std::endl;
-            // std::cout << q_rpy[1] * 180/M_PI << std::endl;
-            // std::cout << q_rpy[2] * 180/M_PI << std::endl;
-            // std::cout << "-----" << std::endl;
-
-            // std::cout << "current roll, pitch, yaw-----" << std::endl;
-            // std::cout << m_rpy[0] * 180/M_PI << std::endl;
-            // std::cout << m_rpy[1] * 180/M_PI << std::endl;
-            // std::cout << m_rpy[2] * 180/M_PI << std::endl;
-            // std::cout << "old roll, pitch, yaw-----" << std::endl;
-            // std::cout << o_rpy[0] * 180/M_PI << std::endl;
-            // std::cout << o_rpy[1] * 180/M_PI << std::endl;
-            // std::cout << o_rpy[2] * 180/M_PI << std::endl;
-            // std::cout << "diff roll, pitch, yaw-----" << std::endl;
-            // std::cout << diff_rpy[0] * 180/M_PI << std::endl;
-            // std::cout << diff_rpy[1] * 180/M_PI << std::endl;
-            // std::cout << diff_rpy[2] * 180/M_PI << std::endl;
-
-            // std::cout << "current quaternion-----" << std::endl;
-            // std::cout << m_q.x()  << std::endl;
-            // std::cout << m_q.y()  << std::endl;
-            // std::cout << m_q.z()  << std::endl;
-            // std::cout << m_q.w()  << std::endl;
-            // std::cout << "old roll, pitch, yaw-----" << std::endl;
-            // std::cout << o_rpy[0] * 180/M_PI << std::endl;
-            // std::cout << o_rpy[1] * 180/M_PI << std::endl;
-            // std::cout << o_rpy[2] * 180/M_PI << std::endl;
-            // std::cout << "diff roll, pitch, yaw-----" << std::endl;
-            // std::cout << diff_rpy[0] * 180/M_PI << std::endl;
-            // std::cout << diff_rpy[1] * 180/M_PI << std::endl;
-            // std::cout << diff_rpy[2] * 180/M_PI << std::endl;
-
+            
             // Translation
             master_command.pose.position.x = m_px - o_px; // replace '0.0' to your command value
             master_command.pose.position.y = m_py - o_py; // replace '0.0' to your command value
@@ -140,16 +93,19 @@ public:
         // 2.Position to Velocity : publish the position command
         else if(teleoperation_mode_ == 2){
 
+            double k = 0.01;
             // Translation
-            master_command.pose.position.x = 0.0; // replace '0.0' to your command value
-            master_command.pose.position.y = 0.0; // replace '0.0' to your command value
-            master_command.pose.position.z = 0.0; // replace '0.0' to your command value
+            master_command.pose.position.x = k * m_px; // replace '0.0' to your command value
+            master_command.pose.position.y = k * m_py; // replace '0.0' to your command value
+            master_command.pose.position.z = k * m_pz; // replace '0.0' to your command value
 
             // Orientation
-            master_command.pose.orientation.x = 0.0; // replace value to your command value
-            master_command.pose.orientation.y = 0.0; // replace value to your command value
-            master_command.pose.orientation.z = 0.0; // replace value to your command value
-            master_command.pose.orientation.w = 1.0; // replace value to your command value
+            Eigen::Quaternionf q_identity(1, 0, 0, 0);
+            Eigen::Quaternionf q_out = q_identity.slerp(k, m_q);
+            master_command.pose.orientation.x = q_out.x(); // replace value to your command value
+            master_command.pose.orientation.y = q_out.y(); // replace value to your command value
+            master_command.pose.orientation.z = q_out.z(); // replace value to your command value
+            master_command.pose.orientation.w = q_out.w(); // replace value to your command value
         }
 
 

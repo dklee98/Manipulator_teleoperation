@@ -63,8 +63,6 @@ Visualization Manager:
           Value: false
         base_camera_link:
           Value: true
-        master:
-          Value: true
         panda_hand:
           Value: false
         panda_leftfinger:
@@ -99,8 +97,6 @@ Visualization Manager:
       Show Names: true
       Tree:
         world:
-          master:
-            {}
           panda_link0:
             panda_link1:
               panda_link2:
@@ -124,18 +120,94 @@ Visualization Manager:
     - Alpha: 1
       Class: rviz/RobotModel
       Collision Enabled: false
-      Enabled: false
+      Enabled: true
       Links:
         All Links Enabled: true
         Expand Joint Details: false
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
+        base:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_camera_depth_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        base_camera_link:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_hand:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_leftfinger:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link4:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link5:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link6:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link7:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        panda_link8:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        panda_rightfinger:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        world:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
       Name: Franka (Current)
       Robot Description: /robot_description
       TF Prefix: ""
       Update Interval: 0
-      Value: false
+      Value: true
       Visual Enabled: true
     - Alpha: 1
       Axes Length: 0.10000000149011612
@@ -208,7 +280,7 @@ Visualization Manager:
       Marker Topic: /clutch_marker
       Name: Clutch Marker
       Namespaces:
-        my_namespace: true
+        {}
       Queue Size: 100
       Value: true
     - Class: rviz/InteractiveMarkers

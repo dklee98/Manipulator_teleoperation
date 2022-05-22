@@ -134,39 +134,17 @@ public:
         // The value of 'teleoperation_mode_' varaible is defined by the 'teleoperation_mode' parameter in the 'teleoperation.launch' file
         // 1.Position to Position : publish the increments command
         if(teleoperation_mode_ == 1){
-			//  debugging --------------------------------------------------------
-			// Eigen::Vector3d mst_rpy = mst_rot_eig.eulerAngles(0,1,2);
-			// Eigen::Vector3d cur_rpy = cur_rot_eig.eulerAngles(0,1,2);
-			// cout << "master & current roll, pitch, yaw command" << endl;
-			// cout << "roll: " << mst_rpy[0] << " and " << cur_rpy[0] << endl;
-			// cout << "pitc: " << mst_rpy[1] << " and " << cur_rpy[1] << endl;
-			// cout << "yaww: " << mst_rpy[2] << " and " << cur_rpy[2] << endl;
-			// -------------------------------------------------------------------
 
+            // Implement your controller
 			Eigen::Vector3d pos_add = R_BaseToCam_ * R_BaseToMas_ * mst_pos_eig;
 			Eigen::Matrix3d rot_add = R_BaseToCam_ * R_BaseToMas_ * mst_rot_eig * (R_BaseToCam_ * R_BaseToMas_).inverse() * cur_rot_eig;
-			Eigen::Quaterniond q_add(rot_add);
-
-			//  debugging --------------------------------------------------------
-			// Eigen::Vector3d add_rpy = rot_add.eulerAngles(0,1,2);
-			// Eigen::Vector3d cur_rpy = cur_rot_eig.eulerAngles(0,1,2);
-			// cout << "add & current roll, pitch, yaw command" << endl;
-			// cout << "roll: " << add_rpy[0] << " and " << cur_rpy[0] << endl;
-			// cout << "pitc: " << add_rpy[1] << " and " << cur_rpy[1] << endl;
-			// cout << "yaww: " << add_rpy[2] << " and " << cur_rpy[2] << endl;
-			// -------------------------------------------------------------------
-
-			// Eigen::Quaterniond q_add(cur_rot_eig);
-			// tf::Quaternion q_goal_tf;
-			// tf::quaternionEigenToTF(q_add, q_goal_tf);
-			// geometry_msgs::Quaternion q_goal;
-			// tf::quaternionTFToMsg(q_goal_tf, q_goal);
 			
+			Eigen::Quaterniond q_add(rot_add);			
 
-			double k = 1.0;
-			target_pose_.pose.position.x = target_pose_.pose.position.x + k * pos_add(0);
-			target_pose_.pose.position.y = target_pose_.pose.position.y + k * pos_add(1);
-			target_pose_.pose.position.z = target_pose_.pose.position.z + k * pos_add(2);
+            // Update Desired End-effector Pose to the 'target_pose_' variable.
+			target_pose_.pose.position.x = target_pose_.pose.position.x + pos_add(0);
+			target_pose_.pose.position.y = target_pose_.pose.position.y + pos_add(1);
+			target_pose_.pose.position.z = target_pose_.pose.position.z + pos_add(2);
 			target_pose_.pose.orientation.x = q_add.x();
 			target_pose_.pose.orientation.y = q_add.y();
 			target_pose_.pose.orientation.z = q_add.z();
@@ -175,10 +153,21 @@ public:
 
         // 2.Position to Velocity : publish the position command
         else if(teleoperation_mode_ == 2){
-
+			
             // Implement your controller
+			Eigen::Vector3d pos_add = R_BaseToCam_ * R_BaseToMas_ * mst_pos_eig;
+			Eigen::Matrix3d rot_add = R_BaseToCam_ * R_BaseToMas_ * mst_rot_eig * (R_BaseToCam_ * R_BaseToMas_).inverse() * cur_rot_eig;
+			
+			Eigen::Quaterniond q_add(rot_add);
 
             // Update Desired End-effector Pose to the 'target_pose_' variable.
+			target_pose_.pose.position.x = target_pose_.pose.position.x + pos_add(0);
+			target_pose_.pose.position.y = target_pose_.pose.position.y + pos_add(1);
+			target_pose_.pose.position.z = target_pose_.pose.position.z + pos_add(2);
+			target_pose_.pose.orientation.x = q_add.x();
+			target_pose_.pose.orientation.y = q_add.y();
+			target_pose_.pose.orientation.z = q_add.z();
+			target_pose_.pose.orientation.w = q_add.w();
 
         }
 

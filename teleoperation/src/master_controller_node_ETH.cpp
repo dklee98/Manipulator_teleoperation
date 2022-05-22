@@ -90,16 +90,19 @@ public:
         // 2.Position to Velocity : publish the position command
         else if(teleoperation_mode_ == 2){
 
+            double k = 0.01;
             // Translation
-            master_command.pose.position.x = 0.0; // replace '0.0' to your command value
-            master_command.pose.position.y = 0.0; // replace '0.0' to your command value
-            master_command.pose.position.z = 0.0; // replace '0.0' to your command value
+            master_command.pose.position.x = k * m_px; // replace '0.0' to your command value
+            master_command.pose.position.y = k * m_py; // replace '0.0' to your command value
+            master_command.pose.position.z = k * m_pz; // replace '0.0' to your command value
 
             // Orientation
-            master_command.pose.orientation.x = 0.0; // replace value to your command value
-            master_command.pose.orientation.y = 0.0; // replace value to your command value
-            master_command.pose.orientation.z = 0.0; // replace value to your command value
-            master_command.pose.orientation.w = 1.0; // replace value to your command value
+            Eigen::Quaternionf q_identity(1, 0, 0, 0);
+            Eigen::Quaternionf q_out = q_identity.slerp(k, m_q);
+            master_command.pose.orientation.x = q_out.x(); // replace value to your command value
+            master_command.pose.orientation.y = q_out.y(); // replace value to your command value
+            master_command.pose.orientation.z = q_out.z(); // replace value to your command value
+            master_command.pose.orientation.w = q_out.w(); // replace value to your command value
         }
 
 
