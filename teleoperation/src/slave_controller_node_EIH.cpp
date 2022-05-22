@@ -113,16 +113,16 @@ public:
 		tf::Matrix3x3 R_temp = T_BaseToCam_.getBasis();
 		tf::matrixTFToEigen(R_temp,R_BaseToCam_);
 
-		static bool master2base_init = false;
+		static bool b2m_init = false;
         tf::TransformListener listener;
-        if(!master2base_init)
+        if(!b2m_init)
         {
             try{
                 listener.waitForTransform(robot_name_+"_link0", "master",ros::Time(0), ros::Duration(1.5));
                 listener.lookupTransform(robot_name_+"_link0", "master",ros::Time(0),T_BaseToMas_);
 				tf::Matrix3x3 R_temp = T_BaseToMas_.getBasis();
 				tf::matrixTFToEigen(R_temp, R_BaseToMas_);
-                master2base_init = true;
+                b2m_init = true;
             }
             catch (tf::TransformException ex){
                 ROS_ERROR("%s",ex.what());
@@ -150,7 +150,6 @@ public:
 			target_pose_.pose.orientation.z = q_add.z();
 			target_pose_.pose.orientation.w = q_add.w();
         }
-
         // 2.Position to Velocity : publish the position command
         else if(teleoperation_mode_ == 2){
 			
@@ -168,7 +167,6 @@ public:
 			target_pose_.pose.orientation.y = q_add.y();
 			target_pose_.pose.orientation.z = q_add.z();
 			target_pose_.pose.orientation.w = q_add.w();
-
         }
 
         // Publish Target End-effector pose or velocity

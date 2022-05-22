@@ -77,16 +77,19 @@ public:
             Eigen::Quaternionf q = m_q * o_q.inverse();
             Eigen::Vector3f q_rpy = q.toRotationMatrix().eulerAngles(0,1,2);
             
+            double k = 1.0;
             // Translation
-            master_command.pose.position.x = m_px - o_px; // replace '0.0' to your command value
-            master_command.pose.position.y = m_py - o_py; // replace '0.0' to your command value
-            master_command.pose.position.z = m_pz - o_pz; // replace '0.0' to your command value
+            master_command.pose.position.x = k * (m_px - o_px); // replace '0.0' to your command value
+            master_command.pose.position.y = k * (m_py - o_py); // replace '0.0' to your command value
+            master_command.pose.position.z = k * (m_pz - o_pz); // replace '0.0' to your command value
 
             // Orientation
-            master_command.pose.orientation.x = q.x(); // replace value to your command value
-            master_command.pose.orientation.y = q.y(); // replace value to your command value
-            master_command.pose.orientation.z = q.z(); // replace value to your command value
-            master_command.pose.orientation.w = q.w(); // replace value to your command value
+            Eigen::Quaternionf q_identity(1, 0, 0, 0);
+            Eigen::Quaternionf q_out = q_identity.slerp(k, q);
+            master_command.pose.orientation.x = q_out.x(); // replace value to your command value
+            master_command.pose.orientation.y = q_out.y(); // replace value to your command value
+            master_command.pose.orientation.z = q_out.z(); // replace value to your command value
+            master_command.pose.orientation.w = q_out.w(); // replace value to your command value
             
         }
 
